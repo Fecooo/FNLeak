@@ -1,0 +1,71 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.egg
+MANIFEST
+.venv/
+venv/
+env/
+ENV/
+
+# ── Runtime output (user-generated, should not be committed) ──────────────────
+cache/
+icons/
+merged/
+
+# ── Rarity assets (auto-generated on first run) ───────────────────────────────
+# Remove this line if you want to commit your custom rarity backgrounds
+rarities/
+
+# ── Fonts (licensed — do not commit) ─────────────────────────────────────────
+fonts/*.otf
+fonts/*.ttf
+fonts/*.woff
+fonts/*.woff2
+
+# ── Credentials — NEVER commit these ─────────────────────────────────────────
+# settings.json contains Twitter API keys — keep a settings.example.json instead
+# Uncomment the next line to exclude it entirely:
+# settings.json
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+Icon
+*.icloud
+
+# ── Windows ───────────────────────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ── IDE / editors ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.cursor/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+*.tmp
