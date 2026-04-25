@@ -2,6 +2,8 @@
 
 > **Open-source. Locally run. Built for the community.**
 
+![Dashboard](screenshots/FNLeak_Dashboard.png)
+
 ---
 
 ## The Story
@@ -61,11 +63,13 @@ Generate a full section-by-section image of the current Item Shop with:
 - **V-Bucks icon** on every item price
 - **Real-time progress bar** with estimated time remaining during generation
 - **Copy button** per section — one click to copy that section's image
+![Item Shop](screenshots/shop_generation.png)
 
 ### Jam Tracks
 Browse all Jam Tracks currently in the shop with album art, artist info, and V-Buck price. Each track has:
 - **Spotify** and **Apple Music** direct links
 - **Copy Post** button — opens a popup with pre-formatted social media text and buttons to copy the text or album art image separately
+![Jam Tracks](screenshots/jam_tracks.png)
 
 ### Player Stats
 Look up any Fortnite player's lifetime stats by Epic username. Generates a full styled stats card image (1500×680) showing:
@@ -76,6 +80,7 @@ Look up any Fortnite player's lifetime stats by Epic username. Generates a full 
 - Burbank font rendering with a win-rate progress bar
 
 Buttons: **Open Image**, **Copy Image**, **Tweet Stats**
+![Player Stats](screenshots/fortnite_stats.png)
 
 ### Map Viewer
 View the current season's live map or any historical season map (Chapter 1 Season 1 all the way through Chapter 6 Season 2). Click the map to open a zoom window with:
@@ -83,6 +88,7 @@ View the current season's live map or any historical season map (Chapter 1 Seaso
 - **◀ ▲ ▼ ▶** pan controls
 - **Fit** button to reset the view
 - Scroll wheel and drag support
+![Map Viewer](screenshots/map_viewer.png)
 
 ### Game Modes
 Browse all current Fortnite playlists with thumbnails and descriptions.
