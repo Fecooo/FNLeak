@@ -1,165 +1,208 @@
-# FNLeak
+# FNLeak - Created by Fevers
 
-> **The original [AutoLeak](https://github.com/FortniteFevers/AutoLeak/tree/beta), rebuilt from the ground up.**
-
-FNLeak is a Fortnite cosmetic datamine and leak tool — a full rewrite of my original **[AutoLeak](https://github.com/FortniteFevers/AutoLeak/tree/beta)** project, updated to work with modern Python, modern APIs, and featuring a brand-new cross-platform GUI.
-
-The original AutoLeak was written years ago before tools like AI-assisted development existed. The core logic, features, and design are all mine — this version takes that original code and, using **[Claude Code](https://claude.ai/claude-code)** (Anthropic's AI coding tool), updates it to the maximum extent possible: fixing every deprecated API call, eliminating thousands of lines of duplicated code, adding a full GUI, and making it run natively on both macOS and Windows.
+> **Open-source. Locally run. Built for the community.**
 
 ---
 
-## What's new vs the original AutoLeak
+## The Story
 
-| Area | Original AutoLeak | FNLeak |
+With the reveal of my journey into a creative in the Fortnite community, the past few weeks I've felt the same emotions when I was making it.
+
+I was inspired to create something new — but this time, with the tools I didn't have back then. I focused on how and when to use AI.
+
+**FNLeak** is my new, improved version of **[AutoLeak](https://github.com/FortniteFevers/AutoLeak)**. Simply put, FNLeak is one of a kind: an open-source, locally run program on both macOS and Windows that interacts with multiple Fortnite APIs to bring Fortnite content creation to anyone, regardless of their experience in the field.
+
+Man, I wish I had this program years ago. I created it for me. That small kid with a dream.
+
+---
+
+## What is FNLeak?
+
+FNLeak is a full-featured Fortnite datamining and content creation tool with a polished desktop GUI. Everything runs **locally on your machine** — no cloud subscription, no account required, no data sent anywhere except to the public Fortnite APIs it uses. Generate cosmetic cards, browse the Item Shop, look up player stats, view historical maps, and more — all from one app.
+
+---
+
+## What's New vs AutoLeak
+
+| Area | AutoLeak (original) | FNLeak |
 |---|---|---|
-| Interface | Terminal menu only | Full GUI + terminal CLI |
+| Interface | Terminal menu only | Full dark-theme GUI |
 | Platform | Windows-focused | macOS + Windows |
-| Pillow compat | Broke on Pillow 10+ (`ANTIALIAS`, `getsize`, `textsize` removed) | Pillow 10/11 fully compatible |
-| Twitter/X | Tweepy v1.1 `update_with_media` (deprecated) | Tweepy v4, v2 API (`create_tweet` + `media_upload`) |
-| Monitors | Recursive retry calls (stack overflow risk) | Proper `while` loops, all in background threads |
-| Dependencies | Hard crash if `pypresence`/`tkinter` missing | Optional — gracefully disabled if absent |
-| `benbot.app` | Hard dependency (often down) | Removed — all calls via `fortnite-api.com` |
-| Code size | ~3,100 lines, heavily duplicated | ~1,400 lines, fully modular |
-| Rarity assets | Required original proprietary files | Auto-generated gradient backgrounds on first run |
+| Distribution | Run from source only | Standalone `.app` / `.exe` |
+| Pillow support | Broke on Pillow 10+ | Pillow 10/11 fully compatible |
+| Twitter/X | Tweepy v1 `update_with_media` (deprecated) | Tweepy v4, v2 API |
+| Item Shop | Basic grid image | Section-by-section with NEW/LEAVING dates, V-Bucks icons |
+| Jam Tracks | Not supported | Full Jam Tracks browser with Spotify + Apple Music links |
+| Player Stats | Not supported | Full stats card image generation |
+| Map Viewer | Not supported | Current + all historical season maps with zoom/pan |
+| Game Modes | Not supported | Full playlist browser with thumbnails |
+| `benbot.app` | Hard dependency (often down) | Removed — `fortnite-api.com` only |
+| Monitors | Stack overflow risk (recursive retries) | Stable background threads |
+| Code size | ~3,100 lines, heavily duplicated | Fully modular |
 
 ---
 
 ## Features
 
-- **Generate Cosmetics** — Detect a new Fortnite update and generate styled card images for every new cosmetic
-- **Search** — Look up any cosmetic by name or ID and generate its card
-- **Item Shop** — Generate a full grid image of the current Item Shop
-- **Update Mode** — Polls for hash changes and auto-generates on a new patch
-- **BR News Watcher** — Monitors the Battle Royale news feed
-- **Notices Watcher** — Monitors Fortnite emergency status changes
-- **Staging Server Watcher** — Detects Epic's pre-release version bumps
-- **Shop Sections Watcher** — Monitors Item Shop section layout changes
-- **Set Search** — Generate cards for all items in a named cosmetic set
-- **Pak Search** — Generate cards from a dynamic pak ID
-- **Twitter/X Integration** — Auto-tweet generated images and updates
+### Cosmetic Generator
+Detect a new Fortnite update and auto-generate styled card images for every new cosmetic. Supports five card styles:
+- **New** — Large centred name and description (default)
+- **Cataba** — Fortnite-style layered composite with backend type badge
+- **Standard** — Centred name, description, and item ID
+- **Clean** — Left-aligned minimal style
+- **Large** — Featured image layout
 
-### Card styles (iconType)
-- `new` — Large centred name + description (default)
-- `cataba` — Fortnite-style layered composite with backend type badge
-- `standard` — Centred name + description + item ID
-- `clean` — Left-aligned minimal style
-- `large` — Same layout as `new`, suited for featured images
+### Cosmetic Search
+Search any cosmetic by name or ID. Click the thumbnail to open a fullscreen preview. Generate and save the card in any style.
 
----
+### Item Shop Generator
+Generate a full section-by-section image of the current Item Shop with:
+- **Section headers** showing whether a set is **NEW** or **LEAVING** (with exact date/time popup on click)
+- **V-Bucks icon** on every item price
+- **Real-time progress bar** with estimated time remaining during generation
+- **Copy button** per section — one click to copy that section's image
 
-## Requirements
+### Jam Tracks
+Browse all Jam Tracks currently in the shop with album art, artist info, and V-Buck price. Each track has:
+- **Spotify** and **Apple Music** direct links
+- **Copy Post** button — opens a popup with pre-formatted social media text and buttons to copy the text or album art image separately
 
-| Requirement | Version |
-|---|---|
-| Python | **3.10 or newer** (3.13 recommended) |
-| Pillow | 10.0+ |
-| requests | 2.31+ |
-| colorama | 0.4.6+ |
-| tweepy | 4.14+ |
-| customtkinter | 5.2+ *(GUI only)* |
+### Player Stats
+Look up any Fortnite player's lifetime stats by Epic username. Generates a full styled stats card image (1500×680) showing:
+- Overall stats: K/D, Win Rate, Kills, KPM, Deaths, Matches, Wins
+- Solo / Duo / Squad breakdowns
+- Battle Pass level and progress
+- LTM stats
+- Burbank font rendering with a win-rate progress bar
+
+Buttons: **Open Image**, **Copy Image**, **Tweet Stats**
+
+### Map Viewer
+View the current season's live map or any historical season map (Chapter 1 Season 1 all the way through Chapter 6 Season 2). Click the map to open a zoom window with:
+- **+ / −** zoom buttons
+- **◀ ▲ ▼ ▶** pan controls
+- **Fit** button to reset the view
+- Scroll wheel and drag support
+
+### Game Modes
+Browse all current Fortnite playlists with thumbnails and descriptions.
+
+### Creator Code
+Look up any Support-a-Creator code and view earnings stats.
+
+### Monitors
+Set up background watchers that auto-run and optionally tweet when triggered:
+- **Update** — Detects a new Fortnite patch
+- **BR News** — Monitors the Battle Royale news feed
+- **Notices** — Monitors Fortnite emergency notices
+- **Staging** — Detects Epic's pre-release version bumps
+- **Shop Sections** — Monitors Item Shop section layout changes
+
+### Twitter / X Integration
+Connect your Twitter/X developer account and tweet generated images directly from the app. Supports tweeting cosmetic cards, merged grids, shop sections, and player stats.
+
+### Settings
+Configure everything from the GUI — name, language, card style, fonts, Twitter keys, merge options, and more.
+
+### Console
+Live log output from all background operations.
 
 ---
 
 ## Installation
 
-### macOS
+### macOS — Standalone App (Recommended)
+
+1. Download **`FNLeak-v1.0.0-macOS.zip`** from the [Releases](../../releases) page
+2. Unzip and drag **`FNLeak.app`** anywhere — Desktop, Applications folder, Downloads — it doesn't matter
+3. **First launch only:** macOS will block the app because it isn't from the App Store. To open it:
+   - Right-click `FNLeak.app` → click **Open** → click **Open** in the dialog
+   - You only need to do this once
+4. The app sets itself up automatically on first launch — no extra folders or files needed
+
+> **Where does FNLeak store its data?**
+> All generated images, cache, and your settings live in `~/Library/Application Support/FNLeak/`.
+> The app creates this automatically. You never need to touch it.
+
+### macOS / Windows — Run from Source
+
+Requires **Python 3.10+** ([python.org](https://www.python.org/downloads/))
 
 ```bash
-# 1. Install Python 3.13 from https://www.python.org/downloads/
-#    (or via Homebrew: brew install python@3.13)
-
-# 2. Clone the repo
+# Clone the repo
 git clone https://github.com/FortniteFevers/FNLeak.git
 cd FNLeak
 
-# 3. Install dependencies + launch
+# macOS / Linux
 ./run.sh
-```
 
-### Windows
-
-```batch
-:: 1. Install Python 3.13 from https://www.python.org/downloads/
-::    Make sure to check "Add Python to PATH" during install
-
-:: 2. Clone the repo
-git clone https://github.com/FortniteFevers/FNLeak.git
-cd FNLeak
-
-:: 3. Install dependencies + launch
+# Windows
 run.bat
-```
 
-### Manual install (any platform)
-
-```bash
+# Or manually
 pip install -r requirements.txt
-python gui.py          # GUI
-python bot.py          # Terminal CLI
+python gui.py
 ```
 
 ---
 
-## Configuration (`settings.json`)
+## Configuration
 
-Edit `settings.json` directly, or use the **Settings** page in the GUI.
+Use the **Settings** page in the GUI, or edit `settings.json` directly.
 
 ```json
 {
-  "name": "YourLeakName",
-  "language": "en",
-  "iconType": "new",
-  "watermark": "YourName",
+  "name":        "YourLeakName",
+  "language":    "en",
+  "iconType":    "new",
+  "watermark":   "YourName",
 
-  "twitAPIKey": "",
-  "twitAPISecretKey": "",
-  "twitAccessToken": "",
-  "twitAccessTokenSecret": "",
+  "twitAPIKey":              "",
+  "twitAPISecretKey":        "",
+  "twitAccessToken":         "",
+  "twitAccessTokenSecret":   "",
 
-  "MergeImages": true,
-  "AutoTweetMerged": false,
-  "BotDelay": 30
+  "MergeImages":      true,
+  "AutoTweetMerged":  false,
+  "BotDelay":         30
 }
 ```
 
-### All settings
-
-| Key | Type | Default | Description |
-|---|---|---|---|
-| `name` | string | `"FNLeak"` | Label shown in tweets and filenames |
-| `footer` | string | `"#Fortnite"` | Appended to text-only tweets |
-| `language` | string | `"en"` | Cosmetic language (`en`, `de`, `fr`, `es`, `ja`, `ko`, `ru`, `zh-CN`, + more) |
-| `iconType` | string | `"new"` | Card style: `new` / `cataba` / `standard` / `clean` / `large` |
-| `imageFont` | string | `"BurbankBigCondensed-Black.otf"` | Main font filename (place in `fonts/`) |
-| `sideFont` | string | `"OpenSans-Regular.ttf"` | Secondary font filename (place in `fonts/`) |
-| `watermark` | string | `""` | Text drawn top-left on every card |
-| `useFeaturedIfAvailable` | bool | `false` | Use featured image over icon if available |
-| `showitemsource` | bool | `true` | Draw the gameplay source tag on cards |
-| `MergeImages` | bool | `true` | Auto-merge all cards into a grid image |
-| `MergeWatermarkUrl` | string | `""` | URL or `image/<filename>` for merge watermark |
-| `AutoTweetMerged` | bool | `false` | Auto-tweet merged image after generation |
-| `BotDelay` | int | `30` | Seconds between monitor poll checks |
-| `twitAPIKey` | string | `""` | Twitter/X API Key |
-| `twitAPISecretKey` | string | `""` | Twitter/X API Secret |
-| `twitAccessToken` | string | `""` | Twitter/X Access Token |
-| `twitAccessTokenSecret` | string | `""` | Twitter/X Access Token Secret |
-
-### Fonts (optional)
-
-Place font `.otf`/`.ttf` files in the `fonts/` directory. The tool falls back to PIL's built-in font if none are present.
-
-Recommended fonts that match the Fortnite style:
-- **Burbank Big Condensed Black** (main card title font)
-- **Open Sans Regular** (description/set text)
+| Key | Default | Description |
+|---|---|---|
+| `name` | `"FNLeak"` | Label shown in tweets and filenames |
+| `footer` | `"#Fortnite"` | Appended to all tweets |
+| `language` | `"en"` | Cosmetic language (`en`, `de`, `fr`, `es`, `ja`, `ko`, `ru`, `zh-CN`, …) |
+| `iconType` | `"new"` | Card style: `new` / `cataba` / `standard` / `clean` / `large` |
+| `imageFont` | `"BurbankBigCondensed-Black.otf"` | Main card font (place in `fonts/`) |
+| `sideFont` | `"OpenSans-Regular.ttf"` | Secondary font (place in `fonts/`) |
+| `watermark` | `""` | Text drawn on every card |
+| `useFeaturedIfAvailable` | `false` | Prefer featured image over icon |
+| `MergeImages` | `true` | Auto-merge all cards into a grid after generation |
+| `AutoTweetMerged` | `false` | Auto-tweet the merged image |
+| `BotDelay` | `30` | Seconds between monitor poll checks |
+| `twitAPIKey` / `twitAPISecretKey` | `""` | Twitter/X API credentials |
+| `twitAccessToken` / `twitAccessTokenSecret` | `""` | Twitter/X access credentials |
 
 ---
 
 ## Twitter / X Setup
 
-1. Go to [developer.twitter.com](https://developer.twitter.com) and create an app
+1. Go to [developer.twitter.com](https://developer.twitter.com) and create a project + app
 2. Under **Keys and Tokens**, generate your API Key, Secret, Access Token, and Access Token Secret
-3. Add them to `settings.json` or the Settings page in the GUI
-4. **Media uploads require Elevated access** — apply for it in the developer portal
+3. Paste them into the **Settings** page in FNLeak (or directly into `settings.json`)
+4. **Note:** Media uploads require **Elevated access** — apply for it in the developer portal
+
+---
+
+## APIs Used
+
+| API | Used For |
+|---|---|
+| [fortnite-api.com](https://fortnite-api.com) | Cosmetics, new items, AES keys, news, shop, playlists, map |
+| [api.fnapi.dev](https://api.fnapi.dev) | Player stats lookup (no API key required) |
+| [fortnite.gg](https://fortnite.gg) | Historical season map images |
+| [Twitter/X API v2](https://developer.twitter.com) | Tweet posting and media upload (optional) |
 
 ---
 
@@ -167,46 +210,53 @@ Recommended fonts that match the Fortnite style:
 
 ```
 FNLeak/
-├── gui.py              # GUI entry point (CustomTkinter)
-├── bot.py              # Terminal CLI entry point
-├── settings.json       # User configuration
-├── requirements.txt    # Python dependencies
-├── run.sh              # macOS/Linux launch script
-├── run.bat             # Windows launch script
+├── gui.py                 # Main GUI entry point (CustomTkinter)
+├── bot.py                 # Terminal CLI entry point
+├── settings.json          # User configuration (auto-created on first launch)
+├── shop_history.json      # Item Shop section history (auto-managed)
+├── requirements.txt       # Python dependencies
+├── run.sh                 # macOS/Linux launch script
+├── run.bat                # Windows launch script
+│
 ├── ALmodules/
-│   ├── image_gen.py    # Cosmetic card generation (all icon styles)
-│   ├── merger.py       # Grid image merger
-│   ├── compressor.py   # Image compression for Twitter size limits
-│   ├── twitter_client.py # Tweepy v4 wrapper
-│   ├── monitors.py     # Update/news/notices/staging watchers
-│   ├── shop.py         # Item Shop generation + shop sections watcher
-│   └── setup.py        # First-run setup (directories + rarity assets)
-├── fonts/              # Place your .otf / .ttf fonts here
-├── rarities/           # Auto-generated rarity background PNGs
-├── icons/              # Output: individual cosmetic card images
-├── merged/             # Output: merged grid images
-├── cache/              # Temp: downloaded icon images
-└── assets/             # Static assets (watermark images, etc.)
+│   ├── image_gen.py       # Cosmetic card generation (all 5 styles)
+│   ├── shop.py            # Item Shop + Jam Tracks generation
+│   ├── stats_gen.py       # Player stats card generation
+│   ├── merger.py          # Grid image merger
+│   ├── compressor.py      # Image compression for Twitter size limits
+│   ├── twitter_client.py  # Tweepy v4 wrapper
+│   ├── monitors.py        # Background watchers (update/news/staging/shop)
+│   └── setup.py           # First-run setup (directories + rarity assets)
+│
+├── fonts/                 # Place your .otf / .ttf fonts here
+├── rarities/              # Auto-generated rarity background PNGs
+├── icons/                 # Output: individual cosmetic card images
+├── merged/                # Output: merged grid + shop section images
+├── cache/                 # Cache: downloaded images
+└── assets/                # Static assets (overlay.png, vbuck.png)
 ```
 
 ---
 
-## APIs used
+## Requirements (source install)
 
-| API | Purpose |
+| Package | Version |
 |---|---|
-| [fortnite-api.com](https://fortnite-api.com) | Cosmetics, new items, AES keys, news, shop, status |
-| [Twitter/X API v2](https://developer.twitter.com) | Posting tweets and media (optional) |
-| Epic Games Staging | Pre-release version detection |
+| Python | 3.10+ |
+| Pillow | 10.0+ |
+| requests | 2.31+ |
+| colorama | 0.4.6+ |
+| tweepy | 4.14+ |
+| customtkinter | 5.2+ |
 
 ---
 
 ## License
 
-This project is open-source for **educational and personal use**.
+Open-source for **educational and personal use**.
 
-> All cosmetic images, names, and game assets are property of **Epic Games**.
-> This tool uses publicly available third-party APIs and does not bypass any access controls.
+> All cosmetic images, names, and game assets are the property of **Epic Games**.
+> FNLeak uses publicly available third-party APIs and does not bypass any access controls or terms of service.
 
 ---
 
@@ -216,8 +266,8 @@ This project is open-source for **educational and personal use**.
 
 Original project: **[AutoLeak](https://github.com/FortniteFevers/AutoLeak)**
 
-This version was rewritten and updated using **[Claude Code](https://claude.ai/claude-code)** by Anthropic — the original logic, architecture, and feature set are entirely the work of Fevers.
+Rebuilt using **[Claude Code](https://claude.ai/claude-code)** by Anthropic — the ideas, original logic, architecture, and feature set are entirely the work of Fevers (me!!!).
 
 ---
 
-*If you have issues or want to contribute, open an issue or join the [AutoLeak Discord](https://dsc.gg/autoleak).*
+*Issues? Questions? Join the [FNLeak Discord](https://dsc.gg/autoleak) or open an issue on GitHub.*
