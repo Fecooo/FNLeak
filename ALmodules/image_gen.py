@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import io
 import os
+import textwrap
 from enum import Enum
 from typing import Optional
 
@@ -23,6 +24,36 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 SIZE        = 512
 RESAMPLE    = Image.LANCZOS        # Was PIL.Image.ANTIALIAS (removed in Pillow 10)
 FALLBACK_BG = (50, 50, 80, 255)   # Dark blue-grey RGBA
+
+LARGE_W = 1793
+LARGE_H = 1080
+
+# Rarity → (button_fill_rgb, button_text_rgb)
+_RARITY_COLORS: dict[str, tuple[tuple[int,int,int], tuple[int,int,int]]] = {
+    "common":       ((184, 184, 184), (92,  92,  92 )),
+    "uncommon":     ((101, 197, 0  ), (2,   80,  2  )),
+    "rare":         ((0,   180, 255), (0,   69,  138)),
+    "epic":         ((209, 90,  255), (76,  25,  123)),
+    "legendary":    ((255, 139, 25 ), (138, 60,  30 )),
+    "mythic":       ((245, 228, 106), (120, 100, 20 )),
+    "exotic":       ((125, 232, 245), (0,   100, 120)),
+    "icon":         ((92,  242, 243), (0,   73,  74 )),
+    "slurp":        ((64,  217, 232), (0,   100, 110)),
+    "marvel":       ((229, 33,  43 ), (89,  7,   12 )),
+    "dc":           ((106, 159, 217), (40,  90,  150)),
+    "starwars":     ((255, 245, 127), (110, 90,  20 )),
+    "dark":         ((96,  64,  168), (45,  27,  105)),
+    "frozen":       ((200, 232, 245), (80,  130, 180)),
+    "lava":         ((255, 144, 96 ), (150, 60,  20 )),
+    "shadow":       ((150, 150, 165), (60,  60,  75 )),
+    "gaminglegends":((128, 120, 255), (40,  8,   95 )),
+    "lambskin":     ((224, 196, 148), (120, 90,  50 )),
+    "shadowfoil":   ((122, 122, 170), (50,  50,  90 )),
+}
+
+
+def _rarity_colors(rarity: str) -> tuple[tuple[int,int,int], tuple[int,int,int]]:
+    return _RARITY_COLORS.get(rarity.lower(), ((184, 184, 184), (92, 92, 92)))
 
 
 class CardStyle(str, Enum):
@@ -331,6 +362,256 @@ def _composite_cataba(rarity: str, icon_img: Image.Image, has_variants: bool) ->
     return canvas
 
 
+# ── large-style full card generator ──────────────────────────────────────────
+
+def _generate_large_card(
+    item: dict,
+    icon_url: str,
+    font_main: Optional[str],
+    font_side: Optional[str],
+    watermark: str,
+    show_source: bool,
+    build: str,
+) -> Image.Image:
+    """
+    Build a 1793×1080 large-style cosmetic card matching the original AutoLeak design.
+
+    Layout:
+      Right side  — cosmetic icon (1083×1083) on cataba rarity background, at x=710
+      Left side   — dark diagonal panel overlay (card.png)
+      Text layer  — name, rarity button, backend type, description, set/ID/season
+      Variants    — up to 6 variant preview images in a 3×2 grid (if item has styles)
+    """
+    ICON_SZ   = 1083
+    DIAG_TOP  = 620   # must match setup.py _make_large_card()
+    DIAG_BOT  = 740
+
+    rarity   = (item.get("rarity") or {}).get("value", "common").lower()
+    name     = (item.get("name") or "TBD").upper()
+    desc     = (item.get("description") or "").upper()
+    rarity_v = (item.get("rarity") or {}).get("value", "common")
+    backend  = (item.get("type") or {}).get("value", "").upper()
+    set_val  = ((item.get("set") or {}).get("value") or "N/A")
+    item_id  = item.get("id", "")
+
+    try:
+        season = f"C{item['introduction']['chapter']} S{item['introduction']['season']}"
+    except Exception:
+        season = "N/A"
+    season_line = season
+    for tag in (item.get("gameplayTags") or []):
+        if "ItemShop" in tag:
+            season_line = f"{season} | ITEMSHOP"
+            break
+
+    # ── 1. Download icon — always prefer featured for full-body shots ─────────
+    # For skins/backpacks the featured image shows the full character;
+    # fall back to icon_url if featured isn't available.
+    images     = item.get("images") or {}
+    best_url   = images.get("featured") or images.get("icon") or icon_url
+    try:
+        resp = requests.get(best_url, timeout=15)
+        resp.raise_for_status()
+        icon_img = Image.open(io.BytesIO(resp.content)).convert("RGBA").resize((ICON_SZ, ICON_SZ), RESAMPLE)
+    except Exception:
+        icon_img = Image.new("RGBA", (ICON_SZ, ICON_SZ), FALLBACK_BG)
+
+    # ── 2. Cataba rarity background at 1083×1083 ─────────────────────────────
+    def _try_open_cataba(name_: str) -> Optional[Image.Image]:
+        p = os.path.join("rarities", "cataba", f"{name_}.png")
+        if os.path.exists(p):
+            try:
+                return Image.open(p).resize((ICON_SZ, ICON_SZ), RESAMPLE).convert("RGBA")
+            except Exception:
+                pass
+        return None
+
+    rarity_bg = _try_open_cataba(rarity) or _try_open_cataba("common") \
+                or Image.new("RGBA", (ICON_SZ, ICON_SZ), FALLBACK_BG)
+
+    icon_composite = Image.new("RGB", (ICON_SZ, ICON_SZ))
+    icon_composite.paste(rarity_bg.convert("RGB"))
+    icon_composite.paste(icon_img, (0, 0), icon_img)
+
+    # ── 3. Main canvas ────────────────────────────────────────────────────────
+    canvas = Image.new("RGB", (LARGE_W, LARGE_H), (0, 0, 0))
+    canvas.paste(icon_composite, (710, 0))
+
+    # ── 4. Dark panel overlay (card.png) ─────────────────────────────────────
+    card_path = os.path.join("rarities", "large", "card.png")
+    if os.path.exists(card_path):
+        try:
+            card_ov = Image.open(card_path).convert("RGBA")
+            canvas.paste(card_ov, (0, 0), card_ov)
+        except Exception:
+            pass
+    else:
+        # Inline fallback so we never fail silently
+        fallback = Image.new("RGBA", (LARGE_W, LARGE_H), (0, 0, 0, 0))
+        ImageDraw.Draw(fallback).polygon(
+            [(0, 0), (DIAG_TOP, 0), (DIAG_BOT, LARGE_H), (0, LARGE_H)],
+            fill=(12, 10, 18, 252)
+        )
+        canvas.paste(fallback, (0, 0), fallback)
+
+    # ── 5. Font selection ─────────────────────────────────────────────────────
+    # Original used BurbankBigRegular-Black for the name and BlackItalic for
+    # everything else.  Fall back to font_main if those aren't in fonts/.
+    burbank_black  = os.path.join("fonts", "BurbankBigRegular-Black.ttf")
+    burbank_italic = os.path.join("fonts", "BurbankBigRegular-BlackItalic.otf")
+    if not os.path.exists(burbank_black):
+        burbank_black = font_main
+    if not os.path.exists(burbank_italic):
+        burbank_italic = font_main
+
+    draw = ImageDraw.Draw(canvas)
+
+    # Define rarity button position up-front so it can constrain name layout
+    BOX_X, BOX_Y = 28, 118
+
+    # ── 6. Name — dynamic size + wrapping, must stay above rarity button ────────
+    # Available area: x=30..590, y=30..BOX_Y-10 (=108)
+    NAME_X      = 30
+    NAME_Y_TOP  = 30
+    NAME_MAX_W  = 580   # panel width before diagonal
+    NAME_MAX_H  = BOX_Y - NAME_Y_TOP - 10   # pixels available
+
+    name_drawn = False
+    for fs in (60, 52, 44, 38, 32):
+        name_font = load_font(burbank_black, fs)
+
+        # ── Try single line ──
+        bb = name_font.getbbox(name)
+        tw_, th_ = bb[2] - bb[0], bb[3] - bb[1]
+        if tw_ <= NAME_MAX_W and th_ <= NAME_MAX_H:
+            draw.text((NAME_X, NAME_Y_TOP - bb[1]), name, font=name_font, fill="white")
+            name_drawn = True
+            break
+
+        # ── Try 2-line split ──
+        words = name.split()
+        for split_at in range(1, len(words)):
+            l1 = " ".join(words[:split_at])
+            l2 = " ".join(words[split_at:])
+            b1, b2 = name_font.getbbox(l1), name_font.getbbox(l2)
+            lh = max(b1[3] - b1[1], b2[3] - b2[1])
+            if (b1[2]-b1[0] <= NAME_MAX_W and b2[2]-b2[0] <= NAME_MAX_W
+                    and lh * 2 + 6 <= NAME_MAX_H):
+                draw.text((NAME_X, NAME_Y_TOP - b1[1]), l1,
+                          font=name_font, fill="white")
+                draw.text((NAME_X, NAME_Y_TOP + lh + 4 - b2[1]), l2,
+                          font=name_font, fill="white")
+                name_drawn = True
+                break
+        if name_drawn:
+            break
+
+    if not name_drawn:
+        # Last resort: draw at smallest size, may still be long
+        nf = load_font(burbank_black, 30)
+        draw.text((NAME_X, NAME_Y_TOP), name, font=nf, fill="white")
+
+    # ── 7. Rarity colored button + backend type ───────────────────────────────
+    body_font = load_font(burbank_italic, 39)
+    btn_color, txt_color = _rarity_colors(rarity_v)
+
+    rarity_upper = rarity_v.upper()
+
+    # Measure actual rendered glyph bounds (accounts for font bearing / italic slant)
+    rb = body_font.getbbox(rarity_upper)
+    text_w = rb[2] - rb[0]   # visual width
+    text_h = rb[3] - rb[1]   # visual height
+
+    PAD_X, PAD_Y = 18, 8
+    tag_w = text_w + PAD_X * 2
+    tag_h = text_h + PAD_Y * 2
+
+    btn_img = Image.new("RGBA", (tag_w, tag_h), btn_color + (255,))
+    canvas.paste(btn_img, (BOX_X, BOX_Y), btn_img)
+    draw = ImageDraw.Draw(canvas)
+
+    # Position draw origin so the visual glyph is centred in the box
+    draw.text((BOX_X + PAD_X - rb[0], BOX_Y + PAD_Y - rb[1]),
+              rarity_upper, font=body_font, fill=txt_color)
+
+    # Backend type — vertically aligned with the rarity button centre
+    backend_x = BOX_X + tag_w + 20
+    bb = body_font.getbbox(backend) if backend else (0, 0, 0, 0)
+    backend_draw_y = BOX_Y + (tag_h - (bb[3] - bb[1])) // 2 - bb[1]
+    draw.text((backend_x, backend_draw_y), backend, font=body_font, fill="white")
+
+    # ── 8. Description (wrapped, y=210) ──────────────────────────────────────
+    wrapped = textwrap.fill(desc, 30)
+    draw.text((34, 210), wrapped, font=body_font, fill="white")
+
+    # ── 9. Bottom metadata ────────────────────────────────────────────────────
+    meta_font = load_font(burbank_italic, 35)
+    id_font   = load_font(burbank_italic, 25)
+    meta_col  = (200, 197, 196)
+
+    draw.text((20, 935),  f"Set: {set_val}",  font=meta_font, fill=meta_col)
+    draw.text((20, 995),  f"ID:  {item_id}",  font=id_font,   fill=meta_col)
+    draw.text((20, 1035), season_line,         font=meta_font, fill=meta_col)
+
+    # ── 10. Watermark ─────────────────────────────────────────────────────────
+    if watermark:
+        wm_font = load_font(burbank_black, 30)
+        draw.text((30, 12), watermark, font=wm_font, fill=(255, 255, 255, 180))
+
+    # ── 11. Variants section (up to 6 style previews) ─────────────────────────
+    variants_list = item.get("variants") or []
+    if variants_list:
+        opts = [
+            o for o in (variants_list[0].get("options") or [])
+            if o.get("name") not in ("DEFAULT", "Stage1")
+        ]
+        if opts:
+            # Dark semi-transparent background for the whole variants area
+            var_bg = Image.new("RGBA", (LARGE_W, LARGE_H), (0, 0, 0, 0))
+            ImageDraw.Draw(var_bg).rectangle(
+                [0, 330, 575, 758], fill=(18, 16, 26, 215)
+            )
+            canvas.paste(var_bg, (0, 0), var_bg)
+            draw = ImageDraw.Draw(canvas)
+
+            # "STYLES" header
+            styles_font = load_font(burbank_italic, 28)
+            draw.text((35, 354), "STYLES", font=styles_font, fill=(200, 200, 200))
+
+            # Variant count + "+" circle
+            count_font = load_font(burbank_italic, 35)
+            draw.text((240, 342), str(len(opts)), font=count_font, fill=(153, 153, 153))
+            cx, cy, r = 207, 360, 20
+            draw.ellipse([cx - r, cy - r, cx + r, cy + r],
+                         fill=(45, 43, 55), outline=(170, 170, 170), width=2)
+            try:
+                plus_f = ImageFont.load_default(size=26)
+            except TypeError:
+                plus_f = ImageFont.load_default()
+            draw.text((cx, cy), "+", font=plus_f, fill=(190, 190, 190), anchor="mm")
+
+            # 3-column × 2-row grid of variant preview images
+            GRID = [
+                (24, 390), (204, 390), (384, 390),
+                (24, 570), (204, 570), (384, 570),
+            ]
+            for opt, (gx, gy) in zip(opts[:6], GRID):
+                v_url = opt.get("image")
+                if not v_url:
+                    continue
+                try:
+                    vr   = requests.get(v_url, timeout=10)
+                    vimg = Image.open(io.BytesIO(vr.content)) \
+                               .resize((157, 157), RESAMPLE).convert("RGBA")
+                    vbox = Image.new("RGB", (157, 157), (33, 31, 32))
+                    vbox.paste(vimg, (0, 0), vimg)
+                    canvas.paste(vbox, (gx, gy))
+                except Exception:
+                    pass
+
+    return canvas
+
+
 # ── main public function ──────────────────────────────────────────────────────
 
 def generate_card(
@@ -359,6 +640,14 @@ def generate_card(
     show_source: Whether to draw the gameplay source tag
     build      : Fortnite version label (used in source tag)
     """
+    # ── Large style: completely different canvas size — handle separately ────────
+    if icon_type == CardStyle.LARGE:
+        img = _generate_large_card(item, icon_url, font_main, font_side,
+                                   watermark, show_source, build)
+        os.makedirs(os.path.dirname(out_path) if os.path.dirname(out_path) else ".", exist_ok=True)
+        img.save(out_path)
+        return
+
     rarity = (item.get("rarity") or {}).get("value", "common").lower()
 
     # ── 1. Download icon ──────────────────────────────────────────────────────
@@ -373,7 +662,6 @@ def generate_card(
         bg     = load_rarity_bg(icon_type, rarity)
         border = load_rarity_layer(icon_type, "border", rarity)
 
-        # Paste icon onto background
         canvas = bg.copy()
         canvas.paste(icon_img, (0, 0), icon_img)
 
@@ -388,7 +676,6 @@ def generate_card(
         CardStyle.CLEAN:    _render_clean,
         CardStyle.NEW:      _render_new,
         CardStyle.CATABA:   _render_cataba,
-        CardStyle.LARGE:    _render_new,   # 'large' uses the same text layout as 'new'
     }
     renderer = style_renderers.get(icon_type, _render_new)
     img = renderer(img, item, font_main, font_side, watermark, show_source, build)

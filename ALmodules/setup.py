@@ -13,10 +13,12 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
-RESAMPLE  = Image.LANCZOS
-ICON_SIZE = 512
+RESAMPLE   = Image.LANCZOS
+ICON_SIZE  = 512
+LARGE_W    = 1793
+LARGE_H    = 1080
 
 ICON_TYPES = ("standard", "clean", "new", "cataba")
 
@@ -74,6 +76,62 @@ def _make_border(color_hex: str, size: int = ICON_SIZE, border: int = 8) -> Imag
     return img
 
 
+def _make_large_card() -> Image.Image:
+    """
+    Generate the left-panel frame overlay for the 'large' icon style.
+    1793×1080 RGBA — dark parallelogram panel on the left, transparent on the right,
+    with a diagonal cut and subtle edge highlight.
+    """
+    DIAG_TOP = 620   # x-coordinate of the diagonal cut at y=0
+    DIAG_BOT = 740   # x-coordinate of the diagonal cut at y=LARGE_H
+
+    card = Image.new("RGBA", (LARGE_W, LARGE_H), (0, 0, 0, 0))
+
+    # ── Gradient panel (dark left, slightly less dark near the cut) ──────────
+    # Draw column-by-column, clipping each column to within the diagonal polygon.
+    pixels = card.load()
+    for x in range(DIAG_BOT + 1):
+        t = x / DIAG_BOT          # 0 at far-left → 1 at cut
+        r = int(12 + t * 10)      # 12 → 22
+        g = int(10 + t * 6)       # 10 → 16
+        b = int(20 + t * 14)      # 20 → 34  (Fortnite blue-purple tint)
+        a = 252
+
+        if x <= DIAG_TOP:
+            # Fully inside the panel for the whole column height
+            for y in range(LARGE_H):
+                pixels[x, y] = (r, g, b, a)
+        else:
+            # Partial column — inside only down to where the diagonal passes through x
+            y_cut = int(LARGE_H * (x - DIAG_TOP) / (DIAG_BOT - DIAG_TOP))
+            for y in range(y_cut):
+                pixels[x, y] = (r, g, b, a)
+
+    draw = ImageDraw.Draw(card)
+
+    # ── Thin horizontal accent line just below the title area ────────────────
+    accent_y = 96
+    x_at_accent = int(DIAG_TOP + (DIAG_BOT - DIAG_TOP) * accent_y / LARGE_H)
+    draw.line([(0, accent_y - 1), (x_at_accent, accent_y - 1)],
+              fill=(255, 255, 255, 35), width=1)
+    draw.line([(0, accent_y),     (x_at_accent, accent_y)],
+              fill=(40, 36, 55, 220), width=1)
+
+    # ── Diagonal edge highlight ───────────────────────────────────────────────
+    draw.line([(DIAG_TOP, 0), (DIAG_BOT, LARGE_H)], fill=(255, 255, 255, 50), width=2)
+
+    return card
+
+
+def ensure_large_assets() -> None:
+    """Generate rarities/large/card.png if it doesn't exist."""
+    base = os.path.join("rarities", "large")
+    os.makedirs(base, exist_ok=True)
+    card_path = os.path.join(base, "card.png")
+    if not os.path.exists(card_path):
+        _make_large_card().save(card_path)
+
+
 def ensure_rarity_assets(rarity_colors: dict[str, str]) -> None:
     """
     For each icon type, generate gradient background + border PNGs for every
@@ -120,6 +178,8 @@ def ensure_rarity_assets(rarity_colors: dict[str, str]) -> None:
             if not os.path.exists(ph_path):
                 Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0)).save(ph_path)
 
+    ensure_large_assets()
+
 
 def ensure_directories() -> None:
     """Create required runtime directories."""
@@ -127,6 +187,7 @@ def ensure_directories() -> None:
         os.makedirs(d, exist_ok=True)
     for it in ICON_TYPES:
         os.makedirs(os.path.join("rarities", it), exist_ok=True)
+    os.makedirs(os.path.join("rarities", "large"), exist_ok=True)
 
 
 def resolve_font(font_name: str) -> Optional[str]:

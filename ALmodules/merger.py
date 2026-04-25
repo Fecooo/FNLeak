@@ -1,11 +1,11 @@
 """
 merger.py — Grid-merge all PNG files in a folder into a single image.
 
-Improvements over the original:
-  - ANTIALIAS → LANCZOS
-  - Handles arbitrary icon counts (not just fixed grid sizes)
-  - Optional watermark overlay (URL or local file path)
-  - Returns the output path for chaining
+Handles both standard 512×512 cards and large 1793×1080 landscape cards:
+  - Square cards  → fixed 6-column grid (same feel as original)
+  - Landscape cards → sqrt-based square-ish grid (matches original AutoLeak large merger)
+
+Card dimensions are auto-detected from the first PNG found — no hardcoded resize.
 """
 
 from __future__ import annotations
@@ -18,63 +18,64 @@ from typing import Optional
 import requests
 from PIL import Image
 
-RESAMPLE  = Image.LANCZOS
-ICON_SIZE = 512
-COLS      = 6     # icons per row (same feel as original)
+RESAMPLE     = Image.LANCZOS
+DEFAULT_COLS = 6     # columns for square / portrait cards
 
 
-def _load_watermark(source: str) -> Optional[Image.Image]:
-    """Load a watermark from a URL or local path. Returns None on any failure."""
+def _load_watermark(source: str, card_w: int, card_h: int) -> Optional[Image.Image]:
+    """Load a watermark, scaled to match the card cell size. Returns None on failure."""
     if not source:
         return None
 
+    img = None
+
     if source.startswith("image/"):
-        # Local file in assets/
         path = os.path.join("assets", source[len("image/"):])
         if os.path.exists(path):
             try:
-                return Image.open(path).convert("RGBA").resize((ICON_SIZE, ICON_SIZE), RESAMPLE)
+                img = Image.open(path).convert("RGBA")
             except Exception:
                 pass
-        return None
-
-    # Try as URL
-    try:
-        resp = requests.get(source, timeout=10)
-        resp.raise_for_status()
-        return Image.open(io.BytesIO(resp.content)).convert("RGBA").resize((ICON_SIZE, ICON_SIZE), RESAMPLE)
-    except Exception:
-        pass
-
-    # Try as local file
-    if os.path.exists(source):
+    elif os.path.exists(source):
         try:
-            return Image.open(source).convert("RGBA").resize((ICON_SIZE, ICON_SIZE), RESAMPLE)
+            img = Image.open(source).convert("RGBA")
+        except Exception:
+            pass
+    else:
+        try:
+            resp = requests.get(source, timeout=10)
+            resp.raise_for_status()
+            img = Image.open(io.BytesIO(resp.content)).convert("RGBA")
         except Exception:
             pass
 
-    return None
+    if img is None:
+        return None
+
+    return img.resize((card_w, card_h), RESAMPLE)
 
 
 def merge_icons(
     icons_dir: str,
     out_path: str,
-    cols: int = COLS,
-    icon_size: int = ICON_SIZE,
+    cols: int = DEFAULT_COLS,
     watermark_url: str = "",
     bg_color: tuple[int, int, int] = (30, 30, 30),
 ) -> str:
     """
     Merge all PNG files in icons_dir into a grid image saved at out_path.
 
+    Card size is auto-detected from the first PNG — no forced resize.
+    Large landscape cards (e.g. 1793×1080) automatically switch to a
+    sqrt-based grid so the output stays roughly square.
+
     Parameters
     ----------
-    icons_dir   : Directory containing <id>.png icon files
-    out_path    : Output file path (jpg or png)
-    cols        : Number of icons per row
-    icon_size   : Pixel size of each icon cell
-    watermark_url : URL or local path of a watermark to append as an extra cell
-    bg_color    : RGB background fill colour
+    icons_dir     : Directory containing <id>.png icon files
+    out_path      : Output file path (.jpg or .png)
+    cols          : Columns per row for square/portrait cards (ignored for landscape)
+    watermark_url : URL or local path of a watermark appended as the last cell
+    bg_color      : RGB background fill colour
 
     Returns
     -------
@@ -89,41 +90,65 @@ def merge_icons(
     if not icon_files:
         raise ValueError(f"No PNG files found in {icons_dir}")
 
-    # Load watermark (appended as the last "icon cell" if present)
-    wm_img = _load_watermark(watermark_url)
+    # ── Detect card dimensions from the first valid image ─────────────────────
+    card_w, card_h = 512, 512
+    for path in icon_files:
+        try:
+            with Image.open(path) as probe:
+                card_w, card_h = probe.size
+            break
+        except Exception:
+            continue
+
+    # ── Append watermark cell if requested ────────────────────────────────────
+    wm_path = None
+    wm_img  = _load_watermark(watermark_url, card_w, card_h)
     if wm_img:
-        # Save to icons dir with a guaranteed last-sort key
         wm_path = os.path.join(icons_dir, "zzz_watermark.png")
         wm_img.save(wm_path)
         icon_files.append(wm_path)
 
     total = len(icon_files)
-    rows  = math.ceil(total / cols)
 
-    grid_w = cols * icon_size
-    grid_h = rows * icon_size
+    # ── Grid layout ───────────────────────────────────────────────────────────
+    if card_w > card_h:
+        # Landscape cards (large style): sqrt-based grid, same as original AutoLeak
+        n_cols = math.ceil(math.sqrt(total))
+        n_rows = math.ceil(total / n_cols)
+    else:
+        # Square / portrait cards: fixed column count
+        n_cols = cols
+        n_rows = math.ceil(total / n_cols)
 
+    grid_w = n_cols * card_w
+    grid_h = n_rows * card_h
     canvas = Image.new("RGB", (grid_w, grid_h), bg_color)
 
+    # ── Place each card ───────────────────────────────────────────────────────
     for idx, path in enumerate(icon_files):
         try:
-            icon = Image.open(path).convert("RGB").resize((icon_size, icon_size), RESAMPLE)
+            icon = Image.open(path).convert("RGB")
+            # Resize only if this particular file differs from the detected size
+            if icon.size != (card_w, card_h):
+                icon = icon.resize((card_w, card_h), RESAMPLE)
         except Exception:
-            icon = Image.new("RGB", (icon_size, icon_size), (80, 80, 80))
+            icon = Image.new("RGB", (card_w, card_h), (80, 80, 80))
 
-        row = idx // cols
-        col = idx % cols
-        canvas.paste(icon, (col * icon_size, row * icon_size))
+        row = idx // n_cols
+        col = idx % n_cols
+        canvas.paste(icon, (col * card_w, row * card_h))
 
-    os.makedirs(os.path.dirname(out_path) if os.path.dirname(out_path) else ".", exist_ok=True)
-
-    # Determine format
+    # ── Save ──────────────────────────────────────────────────────────────────
+    os.makedirs(
+        os.path.dirname(out_path) if os.path.dirname(out_path) else ".",
+        exist_ok=True,
+    )
     fmt = "JPEG" if out_path.lower().endswith((".jpg", ".jpeg")) else "PNG"
     save_kwargs = {"quality": 92, "optimize": True} if fmt == "JPEG" else {}
     canvas.save(out_path, fmt, **save_kwargs)
 
-    # Clean up watermark temp file
-    if wm_img:
+    # Clean up temporary watermark file
+    if wm_path:
         try:
             os.remove(wm_path)
         except OSError:

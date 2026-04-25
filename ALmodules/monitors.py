@@ -56,9 +56,9 @@ def watch_cosmetics(
 
     # Grab the initial hash
     while old_hash is None:
-        data = _get_json(f"{FORTNITE_API}/v2/cosmetics/br/new", params={"language": language})
+        data = _get_json(f"{FORTNITE_API}/v2/cosmetics/new", params={"language": language})
         if data:
-            old_hash = data["data"]["hash"]
+            old_hash = data["data"]["hashes"]["br"]
         else:
             print(Fore.YELLOW + "  Waiting for API…")
             time.sleep(delay)
@@ -66,9 +66,9 @@ def watch_cosmetics(
     try:
         while True:
             count += 1
-            data = _get_json(f"{FORTNITE_API}/v2/cosmetics/br/new", params={"language": language})
+            data = _get_json(f"{FORTNITE_API}/v2/cosmetics/new", params={"language": language})
             if data:
-                new_hash = data["data"]["hash"]
+                new_hash = data["data"]["hashes"]["br"]
                 print(Fore.GREEN + f"  Checking… ({count})", end="\r")
                 if new_hash != old_hash:
                     print(Fore.CYAN + f"\n  [!] Hash changed — running update…")

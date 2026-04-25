@@ -160,14 +160,14 @@ def cmd_generate_cosmetics(cfg: dict, tw: TwitterClient):
 
     print(Fore.CYAN + f"\nFetching new cosmetics (language={lang}, iconType={icon_type})...")
     try:
-        resp = requests.get(f"{FORTNITE_API}/v2/cosmetics/br/new", params={"language": lang}, timeout=15)
+        resp = requests.get(f"{FORTNITE_API}/v2/cosmetics/new", params={"language": lang}, timeout=15)
         resp.raise_for_status()
     except requests.RequestException as e:
         print(Fore.RED + f"API error: {e}")
         return
 
     data  = resp.json()["data"]
-    items = data["items"]
+    items = data["items"]["br"]
     build = get_version_label(data.get("build", ""))
     print(Fore.GREEN + f"Patch {build} — {len(items)} new cosmetics\n")
 
