@@ -1,8 +1,8 @@
 # FNLeak
 
-> **The original AutoLeak, rebuilt from the ground up.**
+> **The original [AutoLeak](https://github.com/FortniteFevers/AutoLeak/tree/beta), rebuilt from the ground up.**
 
-FNLeak is a Fortnite cosmetic datamine and leak tool — a full rewrite of my original **[AutoLeak](https://github.com/FortniteFevers/AutoLeak)** project, updated to work with modern Python, modern APIs, and featuring a brand-new cross-platform GUI.
+FNLeak is a Fortnite cosmetic datamine and leak tool — a full rewrite of my original **[AutoLeak](https://github.com/FortniteFevers/AutoLeak/tree/beta)** project, updated to work with modern Python, modern APIs, and featuring a brand-new cross-platform GUI.
 
 The original AutoLeak was written years ago before tools like AI-assisted development existed. The core logic, features, and design are all mine — this version takes that original code and, using **[Claude Code](https://claude.ai/claude-code)** (Anthropic's AI coding tool), updates it to the maximum extent possible: fixing every deprecated API call, eliminating thousands of lines of duplicated code, adding a full GUI, and making it run natively on both macOS and Windows.
 
