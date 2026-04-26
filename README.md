@@ -38,7 +38,7 @@ FNLeak is a full-featured Fortnite datamining and content creation tool with a p
 | Player Stats | Not supported | Full stats card image generation |
 | Map Viewer | Not supported | Current + all historical season maps with zoom/pan |
 | Game Modes | Not supported | Full playlist browser with thumbnails |
-| `benbot.app` | Hard dependency (often down) | Removed — `fortnite-api.com` only |
+| Outdated API's | Fortntieapi.io, BenBot, no longer supported. | Removed — `fortnite-api.com` only |
 | Monitors | Stack overflow risk (recursive retries) | Stable background threads |
 | Code size | ~3,100 lines, heavily duplicated | Fully modular |
 
