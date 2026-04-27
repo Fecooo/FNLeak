@@ -1,5 +1,5 @@
 @echo off
-:: FNLeak launcher for Windows
+:: FNLeak launcher for Windows- NOT mac
 :: Double-click this file, or run from Command Prompt / PowerShell.
 :: Usage:
 ::   run.bat          -> launches GUI
