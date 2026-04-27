@@ -146,15 +146,19 @@ chmod +x /path/to/FNLeak/run.command
 
 ---
 
-### Launching FNLeak
+### Launching FNLeak (macOS)
 
 After the one-time setup, **double-click `run.command`** in Finder to launch FNLeak.
 
 > Requires **Python 3.10+** — download from [python.org](https://www.python.org/downloads/) if needed.
 
+> **Note:** Do not move `run.command` out of the FNLeak folder — it will stop working.
+> 
+> For a Desktop shortcut: right-click `run.command` → **Make Alias** → drag the alias to your Desktop.
+
 ## Running FNLeak from Source (Windows)
 
-### Launching FNLeak
+### Launching FNLeak (Windows)
 
 **Double-click `run.bat`** in File Explorer to launch FNLeak.
 
