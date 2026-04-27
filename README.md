@@ -53,6 +53,7 @@ Detect a new Fortnite update and auto-generate styled card images for every new 
 - **Standard** — Centred name, description, and item ID
 - **Clean** — Left-aligned minimal style
 - **Large** — Featured image layout
+![Cosmetic Generator](screenshots/cosmeticgen.jpeg)
 
 ### Cosmetic Search
 Search any cosmetic by name or ID. Click the thumbnail to open a fullscreen preview. Generate and save the card in any style.
