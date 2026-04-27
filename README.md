@@ -83,7 +83,7 @@ Buttons: **Open Image**, **Copy Image**, **Tweet Stats**
 ![Player Stats](screenshots/fortnite_stats.png)
 
 ### Map Viewer
-View the current season's live map or any historical season map (Chapter 1 Season 1 all the way through Chapter 6 Season 2). Click the map to open a zoom window with:
+View the current season's live map or any historical season map (Chapter 1 Season 1 all the way through Chapter 7 Season 2, including Mini Seasons). Click the map to open a zoom window with:
 - **+ / −** zoom buttons
 - **◀ ▲ ▼ ▶** pan controls
 - **Fit** button to reset the view
@@ -212,7 +212,7 @@ Use the **Settings** page in the GUI, or edit `settings.json` directly.
 1. Go to [developer.twitter.com](https://developer.twitter.com) and create a project + app
 2. Under **Keys and Tokens**, generate your API Key, Secret, Access Token, and Access Token Secret
 3. Paste them into the **Settings** page in FNLeak (or directly into `settings.json`)
-4. **Note:** Media uploads require **Elevated access** — apply for it in the developer portal
+4. **Note:** Media uploads require **Elevated access** — apply for it in the developer portal. Elevated access is free but requires manual approval from Twitter/X and can take several days.
 
 ---
 
@@ -236,8 +236,8 @@ FNLeak/
 ├── settings.json          # User configuration (auto-created on first launch)
 ├── shop_history.json      # Item Shop section history (auto-managed)
 ├── requirements.txt       # Python dependencies
-├── run.sh                 # macOS/Linux launch script
-├── run.bat                # Windows launch script
+├── run.command            # macOS launch script (double-click to run)
+├── run.bat                # Windows launch script (double-click to run)
 │
 ├── ALmodules/
 │   ├── image_gen.py       # Cosmetic card generation (all 5 styles)
@@ -291,4 +291,9 @@ Rebuilt using **[Claude Code](https://claude.ai/claude-code)** by Anthropic — 
 
 ---
 
-*Issues? Questions? Join the [FNLeak Discord](https://dsc.gg/autoleak) or open an issue on GitHub.*
+## Support
+
+Issues? Questions? Feature requests?
+
+- **Discord:** [dsc.gg/autoleak](https://dsc.gg/autoleak)
+- **GitHub Issues:** [open an issue](../../issues)
