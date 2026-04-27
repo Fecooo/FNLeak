@@ -130,25 +130,36 @@ Live log output from all background operations.
 > All generated images, cache, and your settings live in `~/Library/Application Support/FNLeak/`.
 > The app creates this automatically. You never need to touch it.
 
-### macOS / Windows — Run from Source
+## Running FNLeak from Source (macOS)
 
-Requires **Python 3.10+** ([python.org](https://www.python.org/downloads/))
+### First-time setup (do this once)
+
+1. Open **Terminal**
+2. Run this command to make the launcher executable:
 
 ```bash
-# Clone the repo
-git clone https://github.com/FortniteFevers/FNLeak.git
-cd FNLeak
-
-# macOS / Linux
-./run.sh
-
-# Windows
-run.bat
-
-# Or manually
-pip install -r requirements.txt
-python gui.py
+chmod +x /path/to/FNLeak/run.command
 ```
+
+> Replace `/path/to/FNLeak/` with the actual folder location, e.g.  
+> `chmod +x ~/Desktop/FNLeak/run.command`
+
+---
+
+### Launching FNLeak
+
+After the one-time setup, **double-click `run.command`** in Finder to launch FNLeak.
+
+> Requires **Python 3.10+** — download from [python.org](https://www.python.org/downloads/) if needed.
+
+## Running FNLeak from Source (Windows)
+
+### Launching FNLeak
+
+**Double-click `run.bat`** in File Explorer to launch FNLeak.
+
+> Requires **Python 3.10+** — download from [python.org](https://www.python.org/downloads/)  
+> During installation, make sure to check **"Add Python to PATH"**.
 
 ---
 
