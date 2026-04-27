@@ -2249,12 +2249,14 @@ _MAP_SEASONS = [
     ("c5s3",    "C5 S3  — Wrecked"),
     ("c5s4",    "C5 S4  — Absolute Doom"),
     ("c5remix", "C5  Remix"),
-    ("c6s1",    "C6 S1"),
-    ("c6s2",    "C6 S2"),
-    ("c6s3",    "C6 S3"),
-    ("c7s1",    "C7 S1"),
-    ("c7s2",    "C7 S2"),
-    ("c7s3",    "C7 S3"),
+    ("c6s1",    "C6 S1  - 鬼HUNTERS"),
+    ("c6s2",    "C6 S2  - LAWLESS"),
+    ("c6sm1",    "Chapter 6 Mini Season 1  - Galactic Battle"),
+    ("c6s3",    "C6 S3 - Super"),
+    ("c6s4",    "C7 S4 - Shock N’ Awesome"),
+    ("c6sm2",    "Chapter 6 Mini Season 2  - The Simpsons"),
+    ("c7s1",    "C7 S1  - Pacific Break"),
+    ("c7s2",    "C7 S2  - Showdown"),
 ]
 
 # Map of season-key → fortnite.gg version string for map image
@@ -2293,10 +2295,12 @@ _FGG_VERSION = {
     "c5remix": "32.11",
     "c6s1":    "33.30",
     "c6s2":    "34.00",
-    "c6s3":    "35.00",
-    "c7s1":    "37.40",
-    "c7s2":    "39.40",
-    "c7s3":    "40.20",
+    "c6sm1":    "35.00",
+    "c6s3":    "36.00",
+    "c6s4":    "37.00",
+    "c6sm2":    "38.00",
+    "c7s1":    "39.00",
+    "c7s2":    "40.00",
 }
 
 
