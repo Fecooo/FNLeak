@@ -19,6 +19,36 @@ import time
 from datetime import datetime
 from typing import Optional
 
+# ── PyInstaller bundle: set up working directory ──────────────────────────────
+# When macOS launches a .app the CWD is ~, not inside the bundle.
+# We keep read-only assets in the bundle (sys._MEIPASS) and copy them + all
+# writable runtime dirs into ~/Library/Application Support/FNLeak on first run.
+if hasattr(sys, "_MEIPASS"):
+    import shutil as _shutil
+    _BUNDLE = sys._MEIPASS
+    _DATA   = os.path.expanduser("~/Library/Application Support/FNLeak")
+    os.makedirs(_DATA, exist_ok=True)
+
+    # Copy read-only asset trees once (fonts, rarities, assets)
+    for _d in ("fonts", "rarities", "assets"):
+        _src, _dst = os.path.join(_BUNDLE, _d), os.path.join(_DATA, _d)
+        if os.path.isdir(_src) and not os.path.isdir(_dst):
+            _shutil.copytree(_src, _dst)
+
+    # Copy default config files if not already customised
+    for _f in ("settings.json", "shop_history.json"):
+        _dst = os.path.join(_DATA, _f)
+        _src = os.path.join(_BUNDLE, _f)
+        if not os.path.exists(_dst) and os.path.exists(_src):
+            _shutil.copy(_src, _dst)
+
+    # Ensure writable runtime dirs exist
+    for _d in ("cache", "icons", "merged"):
+        os.makedirs(os.path.join(_DATA, _d), exist_ok=True)
+
+    os.chdir(_DATA)
+    del _shutil, _BUNDLE, _DATA, _d, _f, _src, _dst
+
 import tkinter as tk
 import customtkinter as ctk
 import requests
@@ -620,8 +650,8 @@ class GeneratePage(_Page):
             self.after(0, self._reset_btn)
             return
 
-        data  = resp.json()["data"]
-        items = data["items"]["br"]
+        data  = resp.json().get("data") or {}
+        items = data.get("items", {}).get("br", [])
         build_raw = data.get("build", "")
         try:
             build = build_raw.split("++Fortnite+Release-")[1].split("-CL-")[0]
@@ -1052,7 +1082,7 @@ class SearchPage(_Page):
 
         ctkimg = ctk.CTkImage(light_image=pil_disp, dark_image=pil_disp,
                                size=(disp_w, disp_h))
-        self._fullscreen_ref = ctkimg   # prevent GC
+        win._img_ref = ctkimg   # prevent GC on window object
 
         win.geometry(f"{disp_w}x{disp_h + 48}")
         ctk.CTkLabel(win, text="", image=ctkimg).pack(expand=True, fill="both")
@@ -1445,8 +1475,6 @@ class ShopPage(_Page):
         win = ctk.CTkToplevel(self)
         win.title("Leaving Date")
         win.resizable(False, False)
-        # For instance, if you were to use API key here you would have to be assurative that you are going to place the data information variable
-        # On this line to showcase the cinematic aspects of the API key token variba;e.
         win.attributes("-topmost", True)
         win.configure(fg_color=C["bg"])
 
@@ -2223,6 +2251,10 @@ _MAP_SEASONS = [
     ("c5remix", "C5  Remix"),
     ("c6s1",    "C6 S1"),
     ("c6s2",    "C6 S2"),
+    ("c6s3",    "C6 S3"),
+    ("c7s1",    "C7 S1"),
+    ("c7s2",    "C7 S2"),
+    ("c7s3",    "C7 S3"),
 ]
 
 # Map of season-key → fortnite.gg version string for map image
@@ -2261,6 +2293,10 @@ _FGG_VERSION = {
     "c5remix": "32.11",
     "c6s1":    "33.30",
     "c6s2":    "34.00",
+    "c6s3":    "35.00",
+    "c7s1":    "37.40",
+    "c7s2":    "39.40",
+    "c7s3":    "40.20",
 }
 
 
@@ -2543,7 +2579,8 @@ class MapPage(_Page):
                       corner_radius=6, command=win.destroy).pack(side="right", padx=10, pady=8)
 
         # ── canvas + scrollbars ───────────────────────────────────────────────
-        canvas = tk.Canvas(win, bg="#0d0d0d", highlightthickness=0)
+        canvas = tk.Canvas(win, bg="#0d0d0d", highlightthickness=0,
+                           xscrollincrement=1, yscrollincrement=1)
         h_bar  = tk.Scrollbar(win, orient="horizontal", command=canvas.xview)
         v_bar  = tk.Scrollbar(win, orient="vertical",   command=canvas.yview)
         canvas.configure(xscrollcommand=h_bar.set, yscrollcommand=v_bar.set)
@@ -2594,9 +2631,9 @@ class MapPage(_Page):
 
         def pan(dx: int, dy: int):
             if dx:
-                canvas.xview_scroll(dx, "pixels")
+                canvas.xview_scroll(dx, "units")
             if dy:
-                canvas.yview_scroll(dy, "pixels")
+                canvas.yview_scroll(dy, "units")
 
         # scroll-wheel zoom
         canvas.bind("<MouseWheel>", lambda e: zoom(e.delta, e.x, e.y))
@@ -2606,8 +2643,8 @@ class MapPage(_Page):
         # drag to pan
         canvas.bind("<ButtonPress-1>", lambda e: state.update(drag_x=e.x, drag_y=e.y))
         canvas.bind("<B1-Motion>", lambda e: (
-            canvas.xview_scroll(state["drag_x"] - e.x, "pixels"),
-            canvas.yview_scroll(state["drag_y"] - e.y, "pixels"),
+            canvas.xview_scroll(state["drag_x"] - e.x, "units"),
+            canvas.yview_scroll(state["drag_y"] - e.y, "units"),
             state.update(drag_x=e.x, drag_y=e.y),
         ))
 
